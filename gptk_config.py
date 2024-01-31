@@ -1,0 +1,2 @@
+CASE33BW_PATH = r"C:\Users\al27427\OneDrive - Alliander NV\Documents\programming\grid_processing_toolkit\topologies\saved_topologies\case33bw.pkl"
+SAVED_NETWORKS_FOLDER = r"C:\Users\al27427\OneDrive - Alliander NV\Documents\programming\grid_processing_toolkit\topologies\saved_topologies"
