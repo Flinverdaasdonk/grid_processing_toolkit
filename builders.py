@@ -282,7 +282,11 @@ class GridInspector:
         self.max_edge_depth = max_edge_depth
         self.max_node_depth = max_node_depth
 
-        self.utility_methods = ["find_surrounding_edges", "return_component_sign", "compute_additional_characteristics", "flexible_characteristic_adder", "find_target_order", "find_neighbors_at_depth", "find_edges_at_depth", "match_edge_nodes_to_line_id", "reorder_values", "reorder_dictionary_values_to_list", "determine_to_what_each_node_is_connected", "determine_if_node_is_pq_bus", "match_nodes_to_edge_id"]
+        self.utility_methods = ["find_surrounding_edges", "return_component_sign", "compute_additional_characteristics", 
+                                "flexible_characteristic_adder", "find_target_order", "find_neighbors_at_depth", 
+                                "find_edges_at_depth", "match_edge_nodes_to_line_id", "reorder_values", 
+                                "reorder_dictionary_values_to_list", "determine_to_what_each_node_is_connected", 
+                                "determine_if_node_is_pq_bus", "match_nodes_to_edge_id", "find_nearest_source"]
         
         self.ignore_these_methods = ["add_shortest_path_to_source", "add_impedance_magnitude_over_shortest_path_to_source", "add_reactance_over_shortest_path_to_source", 
                                      "add_resistance_over_shortest_path_to_source" +"add_pagerank", "add_katz_centrality", "add_node_degree", "add_real_power", "add_reactive_power", "add_local_p_ratio", "add_avg_local_loading", "add_max_local_loading"]
@@ -492,6 +496,100 @@ class GridInspector:
 
         values = self.reorder_dictionary_values_to_list(Z_mag_dict, target_order=target_order)
         return key, values
+
+    def add_hops_to_nearest_source(self, component):
+        allowed_components = self.grid.node_types
+        key = "shortest_path_to_nearest_source"
+
+        if component not in allowed_components:
+            return key, False
+        
+        values = {}
+        for node in self.grid.grid["node"]["id"]:
+            nearest_source = self.find_nearest_source(node=node)
+            values[node] = nx.shortest_path_length(G=self.graph, source=nearest_source, target=node)
+        
+        target_order = self.find_target_order(component)
+        values = self.reorder_dictionary_values_to_list(values, target_order=target_order)
+        return key, values
+    
+    def add_R_over_shortest_path_to_nearest_source(self, component):
+        allowed_components = self.grid.node_types
+        key = "R_over_shortest_path_to_nearest_source"
+
+        if component not in allowed_components:
+            return key, False
+        
+        paths_to_nearest_source = {}
+        for node in self.grid.grid["node"]["id"]:
+            nearest_source = self.find_nearest_source(node=node)
+            path = nx.shortest_path(G=self.graph, source=nearest_source, target=node)
+            paths_to_nearest_source[node] = path
+
+        for k, v in paths_to_nearest_source.items():
+            r_tot = 0
+            for n1, n2 in zip(v[:-1], v[1:]):
+                edge_id, _component = self.match_nodes_to_edge_id(edge=(n1, n2))
+                edge_idx = list(self.pgm_format[_component]["id"]).index(edge_id)
+                r_tot += self.grid.core_components[_component][edge_idx].r1 # self.pgm_format[component]["r1"][edge_idx]
+            paths_to_nearest_source[k] = r_tot
+        
+        target_order = self.find_target_order(component)
+        values = self.reorder_dictionary_values_to_list(paths_to_nearest_source, target_order=target_order)
+        return key, values
+
+    def add_X_over_shortest_path_to_nearest_source(self, component):
+        allowed_components = self.grid.node_types
+        key = "X_over_shortest_path_to_nearest_source"
+
+        if component not in allowed_components:
+            return key, False
+        
+        paths_to_nearest_source = {}
+        for node in self.grid.grid["node"]["id"]:
+            nearest_source = self.find_nearest_source(node=node)
+            path = nx.shortest_path(G=self.graph, source=nearest_source, target=node)
+            paths_to_nearest_source[node] = path
+
+        for k, v in paths_to_nearest_source.items():
+            x_tot = 0
+            for n1, n2 in zip(v[:-1], v[1:]):
+                edge_id, _component = self.match_nodes_to_edge_id(edge=(n1, n2))
+                edge_idx = list(self.pgm_format[_component]["id"]).index(edge_id)
+                x_tot += self.grid.core_components[_component][edge_idx].x1 # self.pgm_format[component]["r1"][edge_idx]
+            paths_to_nearest_source[k] = x_tot
+        
+        target_order = self.find_target_order(component)
+        values = self.reorder_dictionary_values_to_list(paths_to_nearest_source, target_order=target_order)
+        return key, values
+
+    def add_Z_mag_over_shortest_path_to_nearest_source(self, component):
+        allowed_components = self.grid.node_types
+        key = "Z_mag_over_shortest_path_to_nearest_source"
+
+        if component not in allowed_components:
+            return key, False
+        
+        paths_to_nearest_source = {}
+        for node in self.grid.grid["node"]["id"]:
+            nearest_source = self.find_nearest_source(node=node)
+            path = nx.shortest_path(G=self.graph, source=nearest_source, target=node)
+            paths_to_nearest_source[node] = path
+
+        for k, v in paths_to_nearest_source.items():
+            z_tot = 0
+            for n1, n2 in zip(v[:-1], v[1:]):
+                edge_id, _component = self.match_nodes_to_edge_id(edge=(n1, n2))
+                edge_idx = list(self.pgm_format[_component]["id"]).index(edge_id)
+                r = self.grid.core_components[_component][edge_idx].r1
+                x = self.grid.core_components[_component][edge_idx].x1
+                z_tot += abs(complex(r, x))
+            paths_to_nearest_source[k] = z_tot
+        
+        target_order = self.find_target_order(component)
+        values = self.reorder_dictionary_values_to_list(paths_to_nearest_source, target_order=target_order)
+        return key, values
+    
 
     def add_shortest_path_to_source(self, component, source_node):
         allowed_components = self.grid.node_types
@@ -899,6 +997,19 @@ class GridInspector:
 
         return key, max_local_loadings
 
+    def find_nearest_source(self, node):
+        source_nodes = self.grid.grid["source"]["node"]
+        nearest_source = -1
+        distance_to_nearest_source = 1e100
+
+        for sn in source_nodes:
+            distance = nx.shortest_path_length(self.graph, source=sn, target=node)
+            if distance < distance_to_nearest_source:
+                distance_to_nearest_source = distance
+                nearest_source = sn
+
+        assert nearest_source != -1
+        return nearest_source
 
 class DepreciatedGridInspector:
     """
