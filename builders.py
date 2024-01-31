@@ -403,8 +403,8 @@ class GridInspector:
 
 
         edge_attrs = {}
-        for fn, tn, r1, x1 in zip(self.grid["line"]["from_node"], self.grid["line"]["to_node"], 
-                                  self.grid["line"]["r1"], self.grid["line"]["x1"]):
+        for fn, tn, r1, x1 in zip(self.grid.grid["line"]["from_node"], self.grid.grid["line"]["to_node"], 
+                                  self.grid.grid["line"]["r1"], self.grid.grid["line"]["x1"]):
             z = (r1**2 + x1**2)**0.5  # compute the impedance magnitude
             edge_attrs[(fn, tn)] = z  # add it to the edge dictionary
 
