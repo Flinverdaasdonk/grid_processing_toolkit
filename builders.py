@@ -287,7 +287,7 @@ class GridInspector:
                                 "determine_if_node_is_pq_bus", "match_nodes_to_edge_id", "find_nearest_source"]
         
         self.ignore_these_methods = ["add_shortest_path_to_source", "add_impedance_magnitude_over_shortest_path_to_source", "add_reactance_over_shortest_path_to_source", 
-                                     "add_resistance_over_shortest_path_to_source" +"add_pagerank", "add_katz_centrality", "add_node_degree", "add_real_power", "add_reactive_power", "add_local_p_ratio", "add_avg_local_loading", "add_max_local_loading"]
+                                     "add_resistance_over_shortest_path_to_source", "add_pagerank", "add_katz_centrality", "add_node_degree", "add_real_power", "add_reactive_power", "add_local_p_ratio", "add_avg_local_loading", "add_max_local_loading"]
         
         default_methods = [m for m in dir(self) if callable(getattr(self, m)) and m.startswith("__") and m.endswith("__")]
 
