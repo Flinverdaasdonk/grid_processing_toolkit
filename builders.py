@@ -282,13 +282,14 @@ class GridInspector:
         self.max_edge_depth = max_edge_depth
         self.max_node_depth = max_node_depth
 
-        self.apply_per_source_methods = ["add_shortest_path_to_source", "add_impedance_magnitude_over_shortest_path_to_source", "add_reactance_over_shortest_path_to_source", "add_resistance_over_shortest_path_to_source"]
         self.utility_methods = ["find_surrounding_edges", "return_component_sign", "compute_additional_characteristics", "flexible_characteristic_adder", "find_target_order", "find_neighbors_at_depth", "find_edges_at_depth", "match_edge_nodes_to_line_id", "reorder_values", "reorder_dictionary_values_to_list", "determine_to_what_each_node_is_connected", "determine_if_node_is_pq_bus", "match_nodes_to_edge_id"]
-        self.ignore_these_methods = ["add_pagerank", "add_katz_centrality", "add_node_degree", "add_real_power", "add_reactive_power", "add_local_p_ratio", "add_avg_local_loading", "add_max_local_loading"]
+        
+        self.ignore_these_methods = ["add_shortest_path_to_source", "add_impedance_magnitude_over_shortest_path_to_source", "add_reactance_over_shortest_path_to_source", 
+                                     "add_resistance_over_shortest_path_to_source" +"add_pagerank", "add_katz_centrality", "add_node_degree", "add_real_power", "add_reactive_power", "add_local_p_ratio", "add_avg_local_loading", "add_max_local_loading"]
         
         default_methods = [m for m in dir(self) if callable(getattr(self, m)) and m.startswith("__") and m.endswith("__")]
 
-        self.all_excluded_methods = self.apply_per_source_methods + self.utility_methods + self.ignore_these_methods + default_methods
+        self.all_excluded_methods = self.utility_methods + self.ignore_these_methods + default_methods
 
     def __call__(self):
         return self.compute_additional_characteristics()
@@ -321,11 +322,6 @@ class GridInspector:
             if not values is False:
                 additional_characteristics[key] = values
 
-        for method in self.apply_per_source_methods:
-            for source_node in self.grid.grid["source"]["node"]:
-                key, values = getattr(self, method)(component, source_node)
-                if not values is False:
-                    additional_characteristics[key] = values
         
         return additional_characteristics
     
