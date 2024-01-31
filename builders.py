@@ -6,6 +6,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
 import numpy as np
+from 
 
 class Grid(core.BaseGrid):
     def __init__(self, node, line, source, sym_load, link=[], sym_gen=[], shunt=[], transformer=[]):
@@ -392,6 +393,35 @@ class GridInspector:
         dictionary = nx.katz_centrality(self.graph)
         values = self.reorder_dictionary_values_to_list(dictionary, target_order=target_order)
         return key, values
+    
+    def add_information_centrality(self, component):
+        allowed_components = self.grid.node_types
+        key = "information_centrality"
+
+        if component not in allowed_components:
+            return key, False
+
+        target_order = self.find_target_order(component)
+
+
+        edge_attrs = {}
+        for fn, tn, r1, x1 in zip(self.grid["line"]["from_node"], self.grid["line"]["to_node"], 
+                                  self.grid["line"]["r1"], self.grid["line"]["x1"]):
+            z = (r1**2 + x1**2)**0.5  # compute the impedance magnitude
+            edge_attrs[(fn, tn)] = z  # add it to the edge dictionary
+
+        graph = self.grid.graph
+        nx.set_edge_attributes(graph, edge_attrs, 'z_mag')
+
+        values = nx.information_centrality(self.graph, weight="z_mag")
+
+        max_v = max(values.values())
+        min_v = min(values.values())
+        values = {node: (v - min_v)/(max_v - min_v) for node, v in values.items()} # normalize
+
+        values = self.reorder_dictionary_values_to_list(values, target_order=target_order)
+        return key, values
+    
 
     def add_node_degree(self, component):
         allowed_components = self.grid.node_types
