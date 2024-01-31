@@ -6,8 +6,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
 import numpy as np
-from 
-
 class Grid(core.BaseGrid):
     def __init__(self, node, line, source, sym_load, link=[], sym_gen=[], shunt=[], transformer=[]):
         super().__init__(node=node, line=line, source=source, sym_load=sym_load, link=link, transformer=transformer, sym_gen=sym_gen, shunt=shunt)
