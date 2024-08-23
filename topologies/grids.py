@@ -18,7 +18,6 @@ def build_line_grid(n_loads, u_rated=230, p_specified=1000, q_specified=100):
 
     if not isinstance(q_specified, list):
         q_specified = [q_specified]*(n_loads+1)
-    
 
     
     sources = []
@@ -40,6 +39,40 @@ def build_line_grid(n_loads, u_rated=230, p_specified=1000, q_specified=100):
             sym_loads.append(core.SymLoad(id=node_id+2, node=node_id, p_specified=p_specified[i], q_specified=q_specified[i]))
 
         prev_node_id = node_id
+
+    return builders.Grid(node=nodes, line=lines, source=sources, sym_load=sym_loads)
+
+def build_star_grid(n_loads, p_values, q_values, u_rated=230):
+    
+
+    if not isinstance(p_values, (np.ndarray, list)):
+        p_values = [p_values]*n_loads
+
+    if not isinstance(q_values, (np.ndarray, list)):
+        q_values = [q_values]*n_loads
+
+    sources = []
+    nodes = []
+    lines = []
+    sym_loads = []
+
+    source_id = 0
+    source_node_id = 1
+
+    sources.append(core.Source(id=source_id, node=source_node_id))
+    nodes.append(core.Node(id=source_node_id, u_rated=u_rated))
+
+    for i in range(0, n_loads):
+        base_id = (i+1)*3
+
+        node_id = base_id
+        sym_load_id = base_id + 1
+        line_id = base_id + 2
+
+        nodes.append(core.Node(id=node_id, u_rated=u_rated))
+        sym_loads.append(core.SymLoad(id=sym_load_id, node=node_id, p_specified=p_values[i], q_specified=q_values[i]))
+        lines.append(core.Line(id=line_id, from_node=source_node_id, to_node=node_id))
+
 
     return builders.Grid(node=nodes, line=lines, source=sources, sym_load=sym_loads)
 

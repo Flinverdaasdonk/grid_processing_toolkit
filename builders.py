@@ -6,6 +6,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
 import numpy as np
+from power_grid_model import initialize_array
+from power_grid_model.validation import assert_valid_batch_data
+from power_grid_model import PowerGridModel, CalculationType
+
 class Grid(core.BaseGrid):
     def __init__(self, node, line, source, sym_load, link=[], sym_gen=[], shunt=[], transformer=[]):
         super().__init__(node=node, line=line, source=source, sym_load=sym_load, link=link, transformer=transformer, sym_gen=sym_gen, shunt=shunt)
@@ -88,11 +92,48 @@ class Grid(core.BaseGrid):
 
         return output
     
+
+    def batch_load_flow(self, batch_data, assert_input_validity=True):
+        """ This function sets up a load flow based on the batch_data. batch_data should be in the following form
+        {'component': {'attribute': [values]}}
+        """
+        #  Assert there is only batch info for a single component
+        assert len(batch_data) == 1  
+        component = list(batch_data.keys())[0]
+        assert "id" in batch_data[component] # make sure 'id' is in the batch data
+
+        for attribute in batch_data[component].keys():
+            # make sure all attributes have the same shape as 'id'
+            assert np.array(batch_data[component][attribute]).shape == np.array(batch_data[component]["id"]).shape 
+
+        assert set(self.grid[component]["id"]) == set(batch_data[component]["id"][0]) # make sure the 'id's are the same
+
+        first = True
+        for attribute, values in batch_data[component].items():
+            if first:
+                first = False
+                initialized_data = initialize_array("update", component, np.array(values).shape)
+
+            initialized_data[attribute] = values
+
+        mutation = {component: initialized_data}
+        
+        assert_valid_batch_data(input_data=self.pgm_format, update_data=mutation, calculation_type=CalculationType.power_flow)
+
+        model = PowerGridModel(self.pgm_format)
+        output_data = model.calculate_power_flow(update_data=mutation)
+
+        return output_data
+
     @decorators.lazy_evaluation_with_caching
     def short_circuit(self):
         output = converters.PPConverter().short_circuit(grid=self)
 
         return output
+
+
+
+
 
     def draw_grid(self, node_colors=None, ax=None):
         return GridArtist(self).draw_grid(node_colors, ax)
@@ -1502,9 +1543,9 @@ class GridArtist:
             for _id in self.grid.grid["node"]["id"]:
                 if _id in self.grid.grid["source"]["node"]:
                     color = "blue"
-                elif _id in self.grid.grid["sym_load"]["node"]:
+                elif "sym_load" in self.grid.grid.keys() and _id in self.grid.grid["sym_load"]["node"]:
                     color = "red"
-                elif _id in self.grid.grid["sym_gen"]["node"]:
+                elif "sym_gen" in self.grid.grid.keys() and _id in self.grid.grid["sym_gen"]["node"]:
                     color = "green"
                 else:
                     color = "skyblue"

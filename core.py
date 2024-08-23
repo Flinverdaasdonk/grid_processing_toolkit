@@ -7,6 +7,7 @@ Author: Flin Verdaasdonk, 29-9-2023
 """
 
 from power_grid_model import LoadGenType
+import numpy as np
 import inspect
 
 class BaseGrid:
@@ -128,7 +129,7 @@ class Branch(Component):
         self.assign_core_attributes()
 
 class Line(Branch):
-    def __init__(self, id, from_node, to_node, from_status=1, to_status=1, r1=0.25, x1=0.02, c1=1e-6, i_n=1_000, tan1=0.0, r0=None, x0=None, c0=None, tan0=None) -> None:
+    def __init__(self, id, from_node, to_node, from_status=1, to_status=1, r1=0.25, x1=0.02, c1=1e-6, i_n=1_000, tan1=0.0, r0=np.nan, x0=np.nan, c0=np.nan, tan0=np.nan) -> None:
 
 
         super().__init__(id, from_node, to_node, from_status, to_status)
@@ -173,7 +174,7 @@ class Appliance(Component):
         self.assign_core_attributes()
     
 class Source(Appliance):
-    def __init__(self, id, node, status=1, u_ref=1.0, u_ref_angle=0, sk=None, rx_ratio=None, z01_ratio=None) -> None:
+    def __init__(self, id, node, status=1, u_ref=1.0, u_ref_angle=0, sk=np.nan, rx_ratio=np.nan, z01_ratio=np.nan) -> None:
         super().__init__(id, node, status)
         self.core_attributes = {**self.core_attributes, "u_ref": u_ref, "u_ref_angle": u_ref_angle, "sk": sk, "rx_ratio": rx_ratio, "z01_ratio": z01_ratio}
         self.assign_core_attributes()
