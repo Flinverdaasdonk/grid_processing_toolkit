@@ -69,7 +69,13 @@ class PGMConverter(Converter):
             component = pgm.initialize_array("input", k, n_items)
             
             for sub_k, sub_v in v.items():
-                component[sub_k] = sub_v
+                try:
+                    component[sub_k] = sub_v
+                except OverflowError as e:
+                    print(f"OverflowError for {k} {sub_k}: {e}\n value = {sub_v}")
+                    raise e
+
+
 
             input_data[k] = component
 

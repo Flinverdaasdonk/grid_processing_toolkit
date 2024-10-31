@@ -14,6 +14,7 @@ class Grid(core.BaseGrid):
     def __init__(self, node, line, source, sym_load, link=[], sym_gen=[], shunt=[], transformer=[]):
         super().__init__(node=node, line=line, source=source, sym_load=sym_load, link=link, transformer=transformer, sym_gen=sym_gen, shunt=shunt)
         self.grid_version = 0
+        self.inspector = GridInspector(grid=self)
 
 
     @property
@@ -339,10 +340,11 @@ class GridInspector:
     
     def compute_additional_characteristics(self):
         """ For all grid components ('node', 'line', 'sym_load', etc.), compute all the additional characteristics and returns this as a dict"""
-        self.graph = self.grid.graph
         self.pgm_format = self.grid.pgm_format
         self.pgm_output = self.grid.load_flow()
         self.short_circuit_output = self.grid.short_circuit()
+        self.graph = self.grid.graph
+
         # self.source_object = grid
         
         

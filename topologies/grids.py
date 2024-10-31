@@ -76,6 +76,49 @@ def build_star_grid(n_loads, p_values, q_values, u_rated=230):
 
     return builders.Grid(node=nodes, line=lines, source=sources, sym_load=sym_loads)
 
+def build_wide_star_grid(n_spokes, n_nodes_per_spoke, p_values, q_values, u_rated=230):
+    if not isinstance(p_values, (np.ndarray, list)):
+        p_values = [p_values]*n_spokes*n_nodes_per_spoke
+
+    if not isinstance(q_values, (np.ndarray, list)):
+        q_values = [q_values]*n_spokes*n_nodes_per_spoke
+
+    assert len(p_values) == n_spokes*n_nodes_per_spoke
+    assert len(q_values) == n_spokes*n_nodes_per_spoke
+
+    sources = []
+    nodes = []
+    lines = []
+    sym_loads = []
+
+    source_id = 0
+    source_node_id = 1
+
+    sources.append(core.Source(id=source_id, node=source_node_id))
+    nodes.append(core.Node(id=source_node_id, u_rated=u_rated))
+
+    for i in range(0, n_spokes):
+        for j in range(0, n_nodes_per_spoke):
+            base_id = (i*n_nodes_per_spoke + j + 1)*3
+
+            node_id = base_id
+            sym_load_id = base_id + 1
+            line_id = base_id + 2
+
+            nodes.append(core.Node(id=node_id, u_rated=u_rated))
+            sym_loads.append(core.SymLoad(id=sym_load_id, node=node_id, p_specified=p_values[i*n_nodes_per_spoke + j], q_specified=q_values[i*n_nodes_per_spoke + j]))
+            
+            if j == 0:
+                # this node is connected to the source
+                lines.append(core.Line(id=line_id, from_node=source_node_id, to_node=node_id))
+            else:
+                # this node is connected to the previous node in the spoke
+                lines.append(core.Line(id=line_id, from_node=base_id-3, to_node=node_id))
+
+
+    return builders.Grid(node=nodes, line=lines, source=sources, sym_load=sym_loads)
+
+
 
 def sloppy_case33bw(dump=False):
     # load the case from pandapower
